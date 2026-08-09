@@ -1,0 +1,9 @@
+# Exclut ces chemins de l'archive Composer (composer install / git archive)
+# afin d'alléger le dist livré aux utilisateurs du package.
+# README.md et LICENSE sont intentionnellement conservés.
+
+tests/            export-ignore
+phpunit.xml       export-ignore
+CHANGELOG.md      export-ignore
+.gitattributes    export-ignore
+.gitignore        export-ignore

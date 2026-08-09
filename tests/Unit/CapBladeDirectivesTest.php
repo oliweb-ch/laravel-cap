@@ -72,4 +72,47 @@ class CapBladeDirectivesTest extends TestCase
         $this->assertStringContainsString('<link rel="stylesheet"', $html);
         $this->assertStringContainsString('vendor/cap/cap-widget.css', $html);
     }
+
+    // -------------------------------------------------------------------------
+    // @capConfig
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function capConfig_directive_renders_script_with_endpoint_and_token_field(): void
+    {
+        $html = Blade::render('@capConfig');
+
+        $this->assertStringContainsString('<script>', $html);
+        $this->assertStringContainsString('window.CAP_API_ENDPOINT', $html);
+        $this->assertStringContainsString('window.CAP_TOKEN_FIELD', $html);
+        $this->assertStringContainsString(json_encode(config('cap.endpoint')), $html);
+        $this->assertStringContainsString(json_encode(config('cap.token_field')), $html);
+    }
+
+    #[Test]
+    public function capConfig_directive_renders_without_nonce_by_default(): void
+    {
+        $html = Blade::render('@capConfig');
+
+        $this->assertStringNotContainsString('nonce=', $html);
+    }
+
+    #[Test]
+    public function capConfig_directive_renders_script_with_nonce(): void
+    {
+        $html = Blade::render('@capConfig("abc123")');
+
+        $this->assertStringContainsString('nonce="abc123"', $html);
+        $this->assertStringContainsString('window.CAP_API_ENDPOINT', $html);
+        $this->assertStringContainsString('window.CAP_TOKEN_FIELD', $html);
+    }
+
+    #[Test]
+    public function capConfig_directive_escapes_nonce_value(): void
+    {
+        $html = Blade::render('@capConfig("<script>alert(1)</script>")');
+
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
+    }
 }

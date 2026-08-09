@@ -109,6 +109,63 @@ class CapServiceTest extends TestCase
         $this->assertFalse($this->capWithFailOpen()->verify('invalid-token'));
     }
 
+    // -------------------------------------------------------------------------
+    // Cas limites : endpoint sans slash final
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function it_calls_correct_siteverify_url_when_endpoint_has_no_trailing_slash(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response(['success' => true]),
+        ]);
+
+        $this->app['config']->set('cap.endpoint', 'https://cap.test/site-key'); // sans slash final
+        $this->app->forgetInstance(Cap::class);
+
+        app(Cap::class)->verify('any-token');
+
+        Http::assertSent(function (Request $request) {
+            return $request->url() === 'https://cap.test/site-key/siteverify';
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // Cas limites : corps de réponse atypiques (200 OK)
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function it_returns_false_when_success_key_is_absent_from_200_response(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response([]), // {}
+        ]);
+
+        $this->assertFalse(app(Cap::class)->verify('any-token'));
+    }
+
+    #[Test]
+    public function it_returns_false_when_success_value_is_null_in_200_response(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response(['success' => null]),
+        ]);
+
+        $this->assertFalse(app(Cap::class)->verify('any-token'));
+    }
+
+    #[Test]
+    public function it_returns_false_without_exception_when_response_body_is_invalid_json(): void
+    {
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response('this-is-not-json', 200),
+        ]);
+
+        // Ne doit pas lever d'exception ; json() retourne null → false
+        $result = app(Cap::class)->verify('any-token');
+        $this->assertFalse($result);
+    }
+
     private function capWithFailOpen(): Cap
     {
         $this->app['config']->set('cap.fail_open', true);
