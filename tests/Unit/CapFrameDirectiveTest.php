@@ -107,6 +107,31 @@ class CapFrameDirectiveTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // L1 — Vérification de event.source côté parent (1.8.7)
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function capFrame_listener_verifies_event_source_against_iframe_contentWindow(): void
+    {
+        $html = Blade::render('@capFrame');
+
+        $this->assertStringContainsString('e.source!==', $html);
+        // La référence à l'iframe est récupérée dynamiquement par getElementById
+        $this->assertStringContainsString("getElementById('cap-frame')", $html);
+        $this->assertStringContainsString('contentWindow', $html);
+    }
+
+    #[Test]
+    public function capFrame_with_nonce_listener_also_verifies_event_source(): void
+    {
+        $html = Blade::render('@capFrame("abc123")');
+
+        $this->assertStringContainsString('e.source!==', $html);
+        $this->assertStringContainsString("getElementById('cap-frame')", $html);
+        $this->assertStringContainsString('contentWindow', $html);
+    }
+
+    // -------------------------------------------------------------------------
     // Échappement du nonce (XSS)
     // -------------------------------------------------------------------------
 

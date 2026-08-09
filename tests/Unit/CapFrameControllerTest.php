@@ -24,14 +24,16 @@ class CapFrameControllerTest extends TestCase
     public function cap_frame_body_contains_configured_endpoint(): void
     {
         $response = $this->get(route('cap.frame'));
-        $this->assertStringContainsString(config('cap.endpoint'), $response->getContent());
+        // L'endpoint est injecté via json_encode() (M1) — les slashes sont échappés en \/
+        $this->assertStringContainsString(json_encode(config('cap.endpoint')), $response->getContent());
     }
 
     #[Test]
     public function cap_frame_body_contains_wasm_asset_url(): void
     {
         $response = $this->get(route('cap.frame'));
-        $this->assertStringContainsString('vendor/cap/cap_wasm_bg.wasm', $response->getContent());
+        // Même pattern que @capScripts : json_encode(asset(...)) (M1)
+        $this->assertStringContainsString(json_encode(asset('vendor/cap/cap_wasm_bg.wasm')), $response->getContent());
     }
 
     #[Test]
@@ -79,10 +81,54 @@ class CapFrameControllerTest extends TestCase
     #[Test]
     public function cap_frame_csp_header_contains_connect_src_key(): void
     {
-        // La valeur de connect-src sera resserrée en 1.8.6 (actuellement `*`).
-        // Ce test vérifie uniquement la présence de la clé, pas sa valeur.
         $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
         $this->assertStringContainsString('connect-src', $csp);
+    }
+
+    // -------------------------------------------------------------------------
+    // M4 — Resserrement de connect-src (1.8.7)
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function cap_frame_csp_connect_src_includes_self(): void
+    {
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("connect-src 'self'", $csp);
+    }
+
+    #[Test]
+    public function cap_frame_csp_connect_src_includes_endpoint_origin(): void
+    {
+        // Endpoint de test : https://cap.test/site-key/ → origine https://cap.test
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString('https://cap.test', $csp);
+    }
+
+    #[Test]
+    public function cap_frame_csp_connect_src_includes_port_when_present_in_endpoint(): void
+    {
+        $this->app['config']->set('cap.endpoint', 'https://cap.test:8443/site-key/');
+
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString('https://cap.test:8443', $csp);
+    }
+
+    #[Test]
+    public function cap_frame_csp_connect_src_falls_back_to_self_when_endpoint_is_invalid(): void
+    {
+        $this->app['config']->set('cap.endpoint', null);
+
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        // Pas d'exception — retombe sur 'self' uniquement, sans autre origine
+        $this->assertStringContainsString("connect-src 'self'", $csp);
+        $this->assertStringNotContainsString("connect-src 'self' http", $csp);
+    }
+
+    #[Test]
+    public function cap_frame_csp_connect_src_does_not_use_wildcard(): void
+    {
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringNotContainsString('connect-src *', $csp);
     }
 
     #[Test]
