@@ -6,6 +6,42 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
+## [1.8.7] — 2026-08-09
+
+### Security
+
+- **M1** — `resources/views/frame.blade.php`: replaced naïve Blade interpolation
+  (`{{ }}`) with `json_encode()` for `CAP_CUSTOM_WASM_URL` and `cap.endpoint`,
+  consistent with the existing `@capScripts` directive. An endpoint or WASM URL
+  containing `'`, `"`, or `</script>` could break the JavaScript string context
+  or prematurely close the `<script>` block.
+- **M2** — `resources/views/frame.blade.php`: replaced the wildcard `'*'`
+  `targetOrigin` in both `postMessage` calls (`cap:token`, `cap:error`) with
+  `window.location.origin`, preventing the Cap proof-of-work token from leaking
+  to any cross-origin parent that might embed the iframe.
+- **L1** — `@capFrame` directive (both nonce and no-nonce branches): the parent-
+  side `message` listener now verifies `e.source === document.getElementById('cap-frame').contentWindow`
+  before accepting a message, preventing a rogue same-origin frame from spoofing
+  a `cap:token` event.
+- **M4** — `CapFrameController`: `connect-src` in the iframe's
+  `Content-Security-Policy` is now built dynamically from the scheme, host, and
+  optional port of `config('cap.endpoint')` via `parse_url()`, combined with
+  `'self'`. Falls back to `'self'` alone if the endpoint is absent or malformed.
+  Replaces the previous `connect-src *`.
+
+### Tests
+
+- `tests/Unit/CapFrameViewTest.php` (new): 7 tests covering M1 JSON encoding
+  (apostrophe, double-quote, `</script>` in endpoint) and M2 postMessage origin
+- `tests/Unit/CapFrameDirectiveTest.php`: +2 tests for L1 `e.source` check
+  (with and without nonce)
+- `tests/Unit/CapFrameControllerTest.php`: +5 tests for M4 connect-src
+  (includes `'self'`, includes endpoint origin, port handling, invalid endpoint
+  fallback, no wildcard); updated 2 existing body-content assertions to
+  `json_encode()` to match the M1 output format
+
+---
+
 ## [1.8.6] — 2026-08-09
 
 ### Fixed
@@ -222,7 +258,8 @@ pre-correction history described above; see v1.8.6.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.6...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.7...HEAD
+[1.8.7]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.6...v1.8.7
 [1.8.6]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.5...v1.8.6
 [1.8.5]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.4...v1.8.5
 [1.8.4]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.3...v1.8.4
