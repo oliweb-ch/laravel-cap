@@ -6,8 +6,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
+## [1.8.6] — 2026-08-09
 
-## [Unreleased] — 1.8.5
+### Fixed
+- Corrected `CHANGELOG.md`: v1.7.2 and v1.8.1–v1.8.4 had been collapsed into
+  a single, mislabeled entry, and several tags were incorrectly marked as
+  "no code change". Each tag's actual content is now documented separately
+  (see note below)
+- Bumped `actions/checkout` (v4 → v5) and `actions/cache` (v4 → v5) in CI to
+  meet GitHub Actions' Node.js 24 runtime requirement
+
+### Note
+v1.8.5 was tagged one commit too early: the CHANGELOG correction above and
+the CI action version bumps were merged into `main` immediately after the
+tag was cut, and were therefore left out of the v1.8.5 release. Per this
+project's policy of never amending a published tag, v1.8.6 exists
+specifically to ship that missed content. No file under `src/`, `config/`,
+or `resources/` was modified in this release either.
+
+## [1.8.5] — 2026-08-09
 
 ### Added
 - Unit tests for `CapFrameController`: `cap.frame` route, CSP headers,
@@ -20,12 +37,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Edge case tests for `Cap::verify()`: endpoint without trailing slash,
   200 response missing the `success` key, 200 response with
   `"success": null`, 200 response with a non-JSON body
-- GitHub Actions CI: PHP 8.2/8.3/8.4 × Laravel 11/12/13 matrix, triggered on
+- GitHub Actions CI: PHP 8.2/8.3/8.4 × Laravel 11/12/13 matrix (PHP 8.2 +
+  Laravel 13 excluded, since Laravel 13 requires PHP 8.3+), triggered on
   every push and pull request
 
 ### No functional change
 No file under `src/`, `config/` or `resources/` was modified in this
-release.
+release. Note: as shipped, this tag's own `CHANGELOG.md` still contains the
+pre-correction history described above; see v1.8.6.
 
 ---
 
@@ -203,7 +222,9 @@ release.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.4...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.6...HEAD
+[1.8.6]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.5...v1.8.6
+[1.8.5]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.4...v1.8.5
 [1.8.4]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.3...v1.8.4
 [1.8.3]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.2...v1.8.3
 [1.8.2]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.1...v1.8.2
