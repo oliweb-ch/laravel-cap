@@ -2,6 +2,7 @@
 # afin d'alléger le dist livré aux utilisateurs du package.
 # README.md et LICENSE sont intentionnellement conservés.
 
+.github/          export-ignore
 tests/            export-ignore
 phpunit.xml       export-ignore
 CHANGELOG.md      export-ignore
