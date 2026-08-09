@@ -244,6 +244,38 @@ window.addEventListener('message', (e) => {
 CAP_FRAME_ROUTE=captcha/frame
 ```
 
+#### Multiple `@capFrame` instances
+
+When a page hosts several forms, pass a unique `id` as the second argument:
+
+```blade
+{{-- Login form --}}
+@capFrame(Vite::cspNonce(), 'login-cap')
+{{-- without nonce: @capFrame(null, 'login-cap') --}}
+
+{{-- Contact form --}}
+@capFrame(Vite::cspNonce(), 'contact-cap')
+```
+
+Each instance gets its own namespaced trigger function instead of `window.capSolve`:
+
+| Directive | iframe / input ids | trigger |
+|-----------|-------------------|---------|
+| `@capFrame` | `cap-frame` / `cap-frame-token` | `window.capSolve()` |
+| `@capFrame($nonce)` | `cap-frame` / `cap-frame-token` | `window.capSolve()` |
+| `@capFrame(null, 'login-cap')` | `login-cap` / `login-cap-token` | `window['capSolve_login-cap']()` |
+| `@capFrame($nonce, 'login-cap')` | `login-cap` / `login-cap-token` | `window['capSolve_login-cap']()` |
+
+```javascript
+// Trigger Cap in the login form
+window['capSolve_login-cap']();
+
+// Trigger Cap in the contact form
+window['capSolve_contact-cap']();
+```
+
+The hidden `<input>` is filled automatically when Cap resolves. `@capFrame` with the default id remains fully backward-compatible.
+
 #### CSP nonce support
 
 All directives accept an optional nonce for strict Content Security Policies:

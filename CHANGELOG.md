@@ -6,6 +6,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
+## [1.9.0] — 2026-08-09
+
+### Added
+- `@capFrame` now accepts an optional second argument `$id` (default `'cap-frame'`),
+  enabling multiple independent Cap widgets on the same page:
+  - `@capFrame` / `@capFrame($nonce)` — unchanged behavior (backward-compatible)
+  - `@capFrame(null, 'login-cap')` / `@capFrame($nonce, 'login-cap')` — renders an
+    iframe with `id="login-cap"`, a hidden input with `id="login-cap-token"`, and
+    registers `window['capSolve_login-cap']()` instead of `window.capSolve()`
+- The `$id` value is escaped via `e()` in HTML attributes and `json_encode()` in
+  JavaScript contexts, consistent with the existing security hardening in 1.8.7
+
+### Tests
+- `tests/Unit/CapFrameDirectiveTest.php`: +12 tests covering the new `$id` argument
+  (non-regression snapshots, custom id without/with nonce, prefixed `capSolve` function,
+  listener targeting, XSS escaping of `$id` in HTML and JS, two-instance scenario)
+
+### Documentation
+- `README.md`: added "Multiple `@capFrame` instances" section with usage table and JS
+  examples
+
+---
 ## [1.8.7] — 2026-08-09
 
 ### Security
@@ -258,7 +280,8 @@ pre-correction history described above; see v1.8.6.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.7...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.7...v1.9.0
 [1.8.7]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.6...v1.8.7
 [1.8.6]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.5...v1.8.6
 [1.8.5]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.4...v1.8.5
