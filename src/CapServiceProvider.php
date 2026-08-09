@@ -84,58 +84,100 @@ class CapServiceProvider extends ServiceProvider
         });
 
         Blade::directive('capFrame', function (string $expression) {
-            if (empty(trim($expression))) {
-                return <<<HTML
-                <?php
-                \$_capTokenField = e(config('cap.token_field', 'cap-token'));
-                \$_capFrameSrc   = e(route('cap.frame'));
-                echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
-                   . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
-                   . ' style="width:0;height:0;border:0;overflow:hidden;"'
-                   . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
-                   . '<script>'
-                   . '(function(){'
-                   . 'window.addEventListener(\'message\',function(e){'
-                   . 'if(e.origin!==window.location.origin)return;'
-                   . 'var _f=document.getElementById(\'cap-frame\');'
-                   . 'if(!_f||e.source!==_f.contentWindow)return;'
-                   . 'if(!e.data||e.data.type!==\'cap:token\')return;'
-                   . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
-                   . '});'
-                   . 'window.capSolve=function(){'
-                   . 'document.getElementById(\'cap-frame\').contentWindow'
-                   . '.postMessage({type:\'cap:start\'},window.location.origin);'
-                   . '};'
-                   . '})();'
-                   . '</script>';
-                ?>
-                HTML;
-            }
-
             return <<<PHP
             <?php
+            [\$_capNonce, \$_capId] = (function(\$__n = null, \$__i = 'cap-frame') { return [\$__n, \$__i]; })({$expression});
             \$_capTokenField = e(config('cap.token_field', 'cap-token'));
             \$_capFrameSrc   = e(route('cap.frame'));
-            \$_capNonce      = e({$expression});
-            echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
-               . '<style nonce="' . \$_capNonce . '">#cap-frame{width:0;height:0;border:0;overflow:hidden;}</style>'
-               . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
-               . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
-               . '<script nonce="' . \$_capNonce . '">'
-               . '(function(){'
-               . 'window.addEventListener(\'message\',function(e){'
-               . 'if(e.origin!==window.location.origin)return;'
-               . 'var _f=document.getElementById(\'cap-frame\');'
-               . 'if(!_f||e.source!==_f.contentWindow)return;'
-               . 'if(!e.data||e.data.type!==\'cap:token\')return;'
-               . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
-               . '});'
-               . 'window.capSolve=function(){'
-               . 'document.getElementById(\'cap-frame\').contentWindow'
-               . '.postMessage({type:\'cap:start\'},window.location.origin);'
-               . '};'
-               . '})();'
-               . '</script>';
+            if (\$_capId === 'cap-frame') {
+                if (\$_capNonce === null) {
+                    echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
+                       . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
+                       . ' style="width:0;height:0;border:0;overflow:hidden;"'
+                       . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
+                       . '<script>'
+                       . '(function(){'
+                       . 'window.addEventListener(\'message\',function(e){'
+                       . 'if(e.origin!==window.location.origin)return;'
+                       . 'var _f=document.getElementById(\'cap-frame\');'
+                       . 'if(!_f||e.source!==_f.contentWindow)return;'
+                       . 'if(!e.data||e.data.type!==\'cap:token\')return;'
+                       . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
+                       . '});'
+                       . 'window.capSolve=function(){'
+                       . 'document.getElementById(\'cap-frame\').contentWindow'
+                       . '.postMessage({type:\'cap:start\'},window.location.origin);'
+                       . '};'
+                       . '})();'
+                       . '</script>';
+                } else {
+                    \$_capNonceE = e(\$_capNonce);
+                    echo '<input type="hidden" name="' . \$_capTokenField . '" id="cap-frame-token">'
+                       . '<style nonce="' . \$_capNonceE . '">#cap-frame{width:0;height:0;border:0;overflow:hidden;}</style>'
+                       . '<iframe src="' . \$_capFrameSrc . '" id="cap-frame"'
+                       . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
+                       . '<script nonce="' . \$_capNonceE . '">'
+                       . '(function(){'
+                       . 'window.addEventListener(\'message\',function(e){'
+                       . 'if(e.origin!==window.location.origin)return;'
+                       . 'var _f=document.getElementById(\'cap-frame\');'
+                       . 'if(!_f||e.source!==_f.contentWindow)return;'
+                       . 'if(!e.data||e.data.type!==\'cap:token\')return;'
+                       . 'document.getElementById(\'cap-frame-token\').value=e.data.token;'
+                       . '});'
+                       . 'window.capSolve=function(){'
+                       . 'document.getElementById(\'cap-frame\').contentWindow'
+                       . '.postMessage({type:\'cap:start\'},window.location.origin);'
+                       . '};'
+                       . '})();'
+                       . '</script>';
+                }
+            } else {
+                \$_capIdE    = e(\$_capId);
+                \$_capIdJson = json_encode(\$_capId);
+                if (\$_capNonce === null) {
+                    echo '<input type="hidden" name="' . \$_capTokenField . '" id="' . \$_capIdE . '-token">'
+                       . '<iframe src="' . \$_capFrameSrc . '" id="' . \$_capIdE . '"'
+                       . ' style="width:0;height:0;border:0;overflow:hidden;"'
+                       . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
+                       . '<script>'
+                       . '(function(){'
+                       . 'window.addEventListener(\'message\',function(e){'
+                       . 'if(e.origin!==window.location.origin)return;'
+                       . 'var _f=document.getElementById(' . \$_capIdJson . ');'
+                       . 'if(!_f||e.source!==_f.contentWindow)return;'
+                       . 'if(!e.data||e.data.type!==\'cap:token\')return;'
+                       . 'document.getElementById(' . \$_capIdJson . '+\'-token\').value=e.data.token;'
+                       . '});'
+                       . 'window[\'capSolve_\'+' . \$_capIdJson . ']=function(){'
+                       . 'document.getElementById(' . \$_capIdJson . ').contentWindow'
+                       . '.postMessage({type:\'cap:start\'},window.location.origin);'
+                       . '};'
+                       . '})();'
+                       . '</script>';
+                } else {
+                    \$_capNonceE = e(\$_capNonce);
+                    echo '<input type="hidden" name="' . \$_capTokenField . '" id="' . \$_capIdE . '-token">'
+                       . '<style nonce="' . \$_capNonceE . '">#' . \$_capIdE . '{width:0;height:0;border:0;overflow:hidden;}</style>'
+                       . '<iframe src="' . \$_capFrameSrc . '" id="' . \$_capIdE . '"'
+                       . ' title="Cap CAPTCHA" aria-hidden="true"></iframe>'
+                       . '<script nonce="' . \$_capNonceE . '">'
+                       . '(function(){'
+                       . 'window.addEventListener(\'message\',function(e){'
+                       . 'if(e.origin!==window.location.origin)return;'
+                       . 'var _f=document.getElementById(' . \$_capIdJson . ');'
+                       . 'if(!_f||e.source!==_f.contentWindow)return;'
+                       . 'if(!e.data||e.data.type!==\'cap:token\')return;'
+                       . 'document.getElementById(' . \$_capIdJson . '+\'-token\').value=e.data.token;'
+                       . '});'
+                       . 'window[\'capSolve_\'+' . \$_capIdJson . ']=function(){'
+                       . 'document.getElementById(' . \$_capIdJson . ').contentWindow'
+                       . '.postMessage({type:\'cap:start\'},window.location.origin);'
+                       . '};'
+                       . '})();'
+                       . '</script>';
+                }
+            }
             ?>
             PHP;
         });
