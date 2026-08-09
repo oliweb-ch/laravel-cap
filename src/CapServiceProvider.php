@@ -87,6 +87,9 @@ class CapServiceProvider extends ServiceProvider
             return <<<PHP
             <?php
             [\$_capNonce, \$_capId] = (function(\$__n = null, \$__i = 'cap-frame') { return [\$__n, \$__i]; })({$expression});
+            if (!preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/', \$_capId) || strlen(\$_capId) > 64) {
+                throw new \InvalidArgumentException('@capFrame: invalid id "' . \$_capId . '" — must match ^[A-Za-z][A-Za-z0-9_-]*$ (max 64 characters).');
+            }
             \$_capTokenField = e(config('cap.token_field', 'cap-token'));
             \$_capFrameSrc   = e(route('cap.frame'));
             if (\$_capId === 'cap-frame') {

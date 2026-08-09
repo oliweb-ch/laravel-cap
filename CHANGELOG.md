@@ -6,6 +6,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
+## [1.9.1] — 2026-08-09
+
+### Fixed
+- **`CapFrameController`** — `connectSrc()` now restricts the extracted scheme to
+  `http` or `https` only. Any other scheme (`ftp:`, `javascript:`, `data:`, empty
+  string, etc.) falls back to `connect-src 'self'` alone, consistent with the
+  existing fallback for a missing or malformed host. `http` remains accepted
+  (legitimate local-development endpoints).
+- **`@capFrame` directive** — The custom `$id` argument (second parameter) is now
+  validated at template render time against the pattern `^[A-Za-z][A-Za-z0-9_-]*$`
+  with a maximum length of 64 characters. An invalid value throws an
+  `\InvalidArgumentException` immediately with a message that includes the received
+  value and the expected constraint. No silent normalisation is performed. The
+  default id `'cap-frame'` satisfies the constraint and is unaffected.
+
+### Tests
+- `tests/Unit/CapFrameControllerTest.php`: +3 tests for the scheme restriction
+  (`ftp:` fallback, `javascript:` fallback, `http:` accepted normally)
+- `tests/Unit/CapFrameDirectiveTest.php`: +7 tests for the id validation (valid ids
+  with underscore/digit, `'foo bar'` / `'../../etc'` / `'1login'` throw exception,
+  64-character id passes, 65-character id throws); 2 existing XSS-escaping tests
+  adapted — payloads that formerly reached the HTML/JS escaping layer now fail
+  validation first (stronger guarantee)
+
+---
 ## [1.9.0] — 2026-08-09
 
 ### Added
@@ -280,7 +305,8 @@ pre-correction history described above; see v1.8.6.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.1...HEAD
+[1.9.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.7...v1.9.0
 [1.8.7]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.6...v1.8.7
 [1.8.6]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.5...v1.8.6

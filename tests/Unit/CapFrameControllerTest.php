@@ -131,6 +131,39 @@ class CapFrameControllerTest extends TestCase
         $this->assertStringNotContainsString('connect-src *', $csp);
     }
 
+    // -------------------------------------------------------------------------
+    // Restriction du scheme dans connect-src (1.9.1)
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function cap_frame_csp_connect_src_falls_back_to_self_when_scheme_is_ftp(): void
+    {
+        $this->app['config']->set('cap.endpoint', 'ftp://cap.test/site-key/');
+
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("connect-src 'self'", $csp);
+        $this->assertStringNotContainsString('ftp://cap.test', $csp);
+    }
+
+    #[Test]
+    public function cap_frame_csp_connect_src_falls_back_to_self_when_scheme_is_javascript(): void
+    {
+        $this->app['config']->set('cap.endpoint', 'javascript://cap.test/');
+
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("connect-src 'self'", $csp);
+        $this->assertStringNotContainsString('javascript://cap.test', $csp);
+    }
+
+    #[Test]
+    public function cap_frame_csp_connect_src_accepts_http_scheme(): void
+    {
+        $this->app['config']->set('cap.endpoint', 'http://cap.test/site-key/');
+
+        $csp = $this->get(route('cap.frame'))->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString("connect-src 'self' http://cap.test", $csp);
+    }
+
     #[Test]
     public function cap_frame_x_frame_options_is_sameorigin(): void
     {

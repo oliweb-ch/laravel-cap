@@ -37,7 +37,12 @@ class CapFrameController
             return "'self'";
         }
 
-        $scheme = parse_url($endpoint, PHP_URL_SCHEME) ?? 'https';
+        $scheme = parse_url($endpoint, PHP_URL_SCHEME) ?? '';
+
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            return "'self'";
+        }
+
         $port   = parse_url($endpoint, PHP_URL_PORT);
         $origin = $scheme . '://' . $host . ($port ? ':' . $port : '');
 

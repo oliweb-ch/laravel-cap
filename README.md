@@ -248,6 +248,12 @@ CAP_FRAME_ROUTE=captcha/frame
 
 When a page hosts several forms, pass a unique `id` as the second argument:
 
+The custom id must satisfy these constraints:
+- pattern: `^[A-Za-z][A-Za-z0-9_-]*$` (starts with a letter; only letters, digits, hyphens, underscores)
+- maximum length: **64 characters**
+
+Passing an invalid id throws an `InvalidArgumentException` immediately at template render time.
+
 ```blade
 {{-- Login form --}}
 @capFrame(Vite::cspNonce(), 'login-cap')

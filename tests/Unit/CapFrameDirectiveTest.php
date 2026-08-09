@@ -274,31 +274,22 @@ class CapFrameDirectiveTest extends TestCase
     // -------------------------------------------------------------------------
 
     #[Test]
-    public function capFrame_custom_id_is_html_escaped_in_attribute(): void
+    public function capFrame_custom_id_xss_payload_is_rejected_by_validation(): void
     {
-        $html = Blade::render('@capFrame(null, \'<img src=x onerror=alert(1)>\')');
+        // Les ids contenant des caractères interdits (balises HTML, etc.) ne passent
+        // plus la validation → exception immédiate au rendu, pas de sortie HTML
+        $this->expectException(\Illuminate\View\ViewException::class);
 
-        // L'attribut id doit être HTML-échappé (e())
-        $this->assertStringNotContainsString('id="<img', $html);
-        $this->assertStringContainsString('&lt;img', $html);
+        Blade::render('@capFrame(null, \'<img src=x onerror=alert(1)>\')');
     }
 
     #[Test]
-    public function capFrame_custom_id_closing_script_tag_is_safe_in_js_context(): void
+    public function capFrame_custom_id_closing_script_tag_is_rejected_by_validation(): void
     {
-        $html = Blade::render('@capFrame(null, \'</script>\')');
+        // </script> ne passe pas la validation → exception, pas de sortie HTML
+        $this->expectException(\Illuminate\View\ViewException::class);
 
-        // json_encode échappe le / en \\/ dans les séquences </
-        // → </script> ne peut pas fermer prématurément le bloc <script>
-        $this->assertStringContainsString(json_encode('</script>'), $html);
-        // Le tag </script> brut ne doit pas apparaître dans le bloc JS
-        // (assertStringNotContainsString compte aussi ce qui est dans le HTML-encoded id,
-        //  mais json_encode produit "<\/script>" donc pas de balise nue)
-        $this->assertSame(
-            0,
-            substr_count($html, '</script>') - 1, // -1 pour le </script> terminal légal
-            'Aucun </script> nu ne doit figurer dans le bloc JS'
-        );
+        Blade::render('@capFrame(null, \'</script>\')');
     }
 
     // -------------------------------------------------------------------------
@@ -314,5 +305,66 @@ class CapFrameDirectiveTest extends TestCase
         $this->assertSame(1, substr_count($html, 'id="login-cap-token"'));
         $this->assertSame(1, substr_count($html, 'id="contact-cap"'));
         $this->assertSame(1, substr_count($html, 'id="contact-cap-token"'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation du format de l'id personnalisé (1.9.1)
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function capFrame_with_valid_id_with_underscore_and_digit_does_not_throw(): void
+    {
+        $html = Blade::render('@capFrame(null, \'contact_form2\')');
+
+        $this->assertStringContainsString('id="contact_form2"', $html);
+    }
+
+    #[Test]
+    public function capFrame_with_valid_id_login_cap_does_not_throw(): void
+    {
+        $html = Blade::render('@capFrame(null, \'login-cap\')');
+
+        $this->assertStringContainsString('id="login-cap"', $html);
+    }
+
+    #[Test]
+    public function capFrame_id_with_space_throws_invalid_argument_exception(): void
+    {
+        $this->expectException(\Illuminate\View\ViewException::class);
+
+        Blade::render('@capFrame(null, \'foo bar\')');
+    }
+
+    #[Test]
+    public function capFrame_id_with_path_traversal_throws_invalid_argument_exception(): void
+    {
+        $this->expectException(\Illuminate\View\ViewException::class);
+
+        Blade::render('@capFrame(null, \'../../etc\')');
+    }
+
+    #[Test]
+    public function capFrame_id_starting_with_digit_throws_invalid_argument_exception(): void
+    {
+        $this->expectException(\Illuminate\View\ViewException::class);
+
+        Blade::render('@capFrame(null, \'1login\')');
+    }
+
+    #[Test]
+    public function capFrame_id_of_65_characters_throws_invalid_argument_exception(): void
+    {
+        $this->expectException(\Illuminate\View\ViewException::class);
+
+        Blade::render('@capFrame(null, \'' . str_repeat('a', 65) . '\')');
+    }
+
+    #[Test]
+    public function capFrame_id_of_exactly_64_characters_does_not_throw(): void
+    {
+        $id   = str_repeat('a', 64);
+        $html = Blade::render('@capFrame(null, \'' . $id . '\')');
+
+        $this->assertStringContainsString('id="' . $id . '"', $html);
     }
 }
