@@ -1,207 +1,226 @@
 # Changelog
 
-Tous les changements notables de ce projet sont documentés dans ce fichier.
+All notable changes to this project are documented in this file.
 
-Format : [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-Versioning : [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
 
 ## [Unreleased] — 1.8.5
 
-### Ajouté
-- Tests unitaires pour `CapFrameController` : route `cap.frame`, headers CSP,
-  `X-Frame-Options`, `Cache-Control`, route personnalisée via `cap.frame_route`
-- Tests unitaires pour la directive `@capFrame` : rendu sans nonce, rendu avec
-  nonce, échappement XSS du nonce, vérification de la présence des contrôles
-  `e.origin` et `window.capSolve` dans le script généré
-- Tests unitaires pour la directive `@capConfig` : rendu sans nonce, rendu avec
-  nonce, échappement XSS du nonce (ajoutés dans `CapBladeDirectivesTest`)
-- Tests de cas limites pour `Cap::verify()` : endpoint sans slash final,
-  réponse 200 sans clé `success`, réponse 200 avec `"success": null`,
-  réponse 200 avec corps non-JSON (ajoutés dans `CapServiceTest`)
+### Added
+- Unit tests for `CapFrameController`: `cap.frame` route, CSP headers,
+  `X-Frame-Options`, `Cache-Control`, custom route via `cap.frame_route`
+- Unit tests for the `@capFrame` directive: rendering without nonce,
+  rendering with nonce, nonce XSS escaping, verification that the generated
+  script checks `e.origin` and exposes `window.capSolve`
+- Unit tests for the `@capConfig` directive: rendering without nonce,
+  rendering with nonce, nonce XSS escaping (added to `CapBladeDirectivesTest`)
+- Edge case tests for `Cap::verify()`: endpoint without trailing slash,
+  200 response missing the `success` key, 200 response with
+  `"success": null`, 200 response with a non-JSON body
+- GitHub Actions CI: PHP 8.2/8.3/8.4 × Laravel 11/12/13 matrix, triggered on
+  every push and pull request
 
-### Aucun changement fonctionnel
-Aucun fichier de `src/`, `config/` ou `resources/` n'a été modifié dans
-cette version.
+### No functional change
+No file under `src/`, `config/` or `resources/` was modified in this
+release.
 
 ---
 
 ## [1.8.4] — 2026-06-16
 
-Pas de changement de code. Re-tag de publication.
+### Added
+- Headless programmatic mode inside the iframe: the Cap widget now runs
+  invisibly and resolves via `postMessage` from the parent page
+  (`window.capSolve()`), with no visible UI inside the iframe
 
 ## [1.8.3] — 2026-06-16
 
-Pas de changement de code. Re-tag de publication.
+### Fixed
+- Replaced the iframe's inline style with `<style nonce>` for compatibility
+  with strict `style-src` policies
+
+### Documentation
+- Documented `@capFrame`, iframe mode, bidirectional postMessage, and
+  `CAP_FRAME_ROUTE`
 
 ## [1.8.2] — 2026-06-16
 
-Pas de changement de code. Re-tag de publication.
+### Fixed
+- Added `img-src data:` to the frame's CSP (the widget's inline SVG was
+  being blocked)
+- Bidirectional `postMessage`: the frame now listens for `cap:start` from
+  the parent before calling `widget.solve()`
 
 ## [1.8.1] — 2026-06-16
 
-### Ajouté
-- Mode programmatique iframe : Cap s'exécute en mode headless dans l'iframe
-  (widget invisible), permettant d'initier `cap.solve()` par `postMessage`
-  depuis la page parente sans afficher d'interface visuelle
+### Fixed
+- Added `'unsafe-inline'` to the frame's `script-src`, required for the
+  widget's inline scripts
 
 ## [1.8.0] — 2026-06-16
 
-### Ajouté
-- Directive `@capFrame` : mode iframe pour les politiques CSP strictes
-  interdisant `unsafe-eval` dans la page parente ; l'iframe possède sa propre
-  CSP permissive
-- Communication bidirectionnelle par `postMessage` entre la page parente et
-  l'iframe (`cap:start` → `cap:token`)
-- Config `cap.frame_route` (env `CAP_FRAME_ROUTE`) pour personnaliser le
-  chemin de la route iframe
-- `CapFrameController` avec headers `Content-Security-Policy`, `X-Frame-Options`
-  et `Cache-Control`
-
-### Corrigé
-- Ajout de `'unsafe-inline'` dans `script-src` de l'iframe pour les scripts
-  inline du widget
-- Ajout de `img-src data:` dans la CSP de l'iframe
-- Remplacement du `style` inline de l'iframe par `<style nonce>` pour la
-  compatibilité avec les politiques `style-src` strictes
+### Added
+- `@capFrame` directive: iframe mode for strict CSP policies that forbid
+  `unsafe-eval` on the parent page; the iframe ships its own permissive CSP
+- Bidirectional `postMessage` communication between the parent page and the
+  iframe (`cap:start` → `cap:token`)
+- `cap.frame_route` config option (env `CAP_FRAME_ROUTE`) to customize the
+  iframe route path
+- `CapFrameController` with `Content-Security-Policy`, `X-Frame-Options`
+  and `Cache-Control` headers
 
 ## [1.7.2] — 2026-06-16
 
-Pas de changement de code. Re-tag de publication.
+### Documentation
+- Documented the strict CSP restriction and Cap v3.x instrumentation's
+  incompatibility with `unsafe-eval` (`eval()` and `new Function()` blocked),
+  with a documented workaround and a reference to tiagozip/cap#268
+- Corrected the published assets table (added `cap_wasm.js`)
+- Corrected the CSP headers section in the README (removed the unnecessary
+  `worker-src blob:`, repositioned `'wasm-unsafe-eval'`, fixed `connect-src`)
 
 ## [1.7.1] — 2026-06-16
 
-### Modifié
-- Mise à jour des assets JS/WASM pour la compatibilité Cap v3.x
-- Adaptation du service provider aux changements d'API Cap v3.x
-
-### Documentation
-- Documentation de la restriction CSP stricte et de l'incompatibilité avec
-  l'instrumentation JS
+### Changed
+- Updated JS/WASM assets for Cap v3.x compatibility (`@cap.js/widget`
+  0.1.56, `@cap.js/wasm` 0.0.7)
+- Adapted the service provider to Cap v3.x API changes (`->asJson()` for
+  `/siteverify`)
+- Injected `window.CAP_SCRIPT_NONCE` in `@capScripts` for widget 0.1.56's
+  native nonce support
 
 ## [1.6.1] — 2026-05-14
 
-Pas de changement de code. Re-tag de publication.
+### Documentation
+- Complete README rewrite: programmatic mode, local WASM, Laravel 13,
+  `@capConfig`
 
 ## [1.6.0] — 2026-05-14
 
-### Ajouté
-- Directive `@capConfig` : injecte `window.CAP_API_ENDPOINT` et
-  `window.CAP_TOKEN_FIELD` en JSON dans un `<script>` (supporte le nonce CSP)
-- Injection de `window.CAP_CUSTOM_WASM_URL` pointant vers l'asset WASM local
-  (`vendor/cap/cap_wasm_bg.wasm`) avant le chargement du module widget
-- Directive `@capScripts` : nouvelle option de WASM local pour mode programmatique
-
-### Documentation
-- README complet : mode programmatique, WASM local, Laravel 13, `@capConfig`
+### Added
+- `@capConfig` directive: injects `window.CAP_API_ENDPOINT` and
+  `window.CAP_TOKEN_FIELD` as JSON in a `<script>` tag (supports CSP nonce)
+- Injection of `window.CAP_CUSTOM_WASM_URL` pointing to the local WASM asset
+  (`vendor/cap/cap_wasm_bg.wasm`) before the widget module loads
+- Local WASM support in `@capScripts` for programmatic mode
 
 ## [1.5.6] — 2026-05-13
 
-### Corrigé
-- Correction de l'affichage CSS du widget en langue française
+### Fixed
+- Fixed widget display width for French-language rendering
 
 ## [1.5.5] — 2026-05-07
 
-### Corrigé
-- Suppression du `!important` sur `display` de `.credits` pour permettre
-  la personnalisation via `::part(attribution)`
+### Fixed
+- Removed `!important` from `.credits` `display` to allow customization via
+  `::part(attribution)`
 
 ## [1.5.4] — 2026-05-07
 
 ### Documentation
-- Ajout d'une option commentée pour masquer le lien d'attribution Cap dans
-  la feuille de styles personnalisée
+- Added a commented-out option to hide the Cap attribution link in the
+  custom stylesheet
 
 ## [1.5.3] — 2026-05-07
 
-### Ajouté
-- Charte graphique URG dans la CSS personnalisée (rouge `#ed1a23` + gris)
+### Added
+- URG color scheme in the custom CSS (red `#ed1a23` + gray)
 
 ## [1.5.2] — 2026-05-07
 
-### Corrigé
-- Correction des noms de variables CSS du widget
+### Fixed
+- Fixed widget CSS variable names
 
 ## [1.5.1] — 2026-05-07
 
-### Modifié
-- Suppression du champ `version` statique dans `composer.json` (Packagist
-  utilise les tags Git)
+### Changed
+- Removed the static `version` field from `composer.json` (Packagist relies
+  on Git tags)
 
 ## [1.5.0] — 2026-05-07
 
-### Ajouté
-- Traductions i18n en anglais et en français (`cap::messages`) pour les
-  messages d'erreur du middleware et de la règle de validation
-- Feuille de styles CSS personnalisable (`vendor/cap/cap-widget.css`)
-- Publication des traductions via `php artisan vendor:publish --tag=cap-lang`
-- Publication des vues via `php artisan vendor:publish --tag=cap-views`
+> This tag was deleted from Packagist and GitHub after being found corrupted.
+> Its content is documented here for historical accuracy; no comparison link
+> is available.
+
+### Added
+- English and French i18n translations (`cap::messages`) for middleware and
+  validation rule error messages
+- Customizable CSS stylesheet (`vendor/cap/cap-widget.css`)
+- Translation publishing via `php artisan vendor:publish --tag=cap-lang`
+- View publishing via `php artisan vendor:publish --tag=cap-views`
 
 ## [1.4.0] — 2026-05-07
 
-### Ajouté
-- Widget Cap patché bundlé localement (`vendor/cap/cap-widget.js`) avec
-  support des politiques CSP strictes
+### Added
+- Bundled a patched Cap widget locally (`vendor/cap/cap-widget.js`), patched
+  from the npm widget (CSP nonce on srcdoc, `white-space: normal`,
+  `min-height: auto`)
+- `@capScripts` now serves the local widget
+  (`public/vendor/cap/cap-widget.js`) instead of jsDelivr, no external CDN
+  dependency
+- Asset publishing via `vendor:publish --tag=cap-assets`
 
 ## [1.3.0] — 2026-05-07
 
-### Ajouté
-- Support du nonce CSP sur la directive `@cap` : attribut
-  `data-cap-csp-nonce` ajouté au `<cap-widget>` quand un nonce est fourni
+### Added
+- CSP nonce support on the `@cap` directive: `data-cap-csp-nonce` attribute
+  added to `<cap-widget>` when a nonce is provided
 
 ## [1.2.0] — 2026-05-07
 
-### Ajouté
-- Support de Laravel 13
+### Added
+- Laravel 13 support
 
 ## [1.1.0] — 2026-05-07
 
-### Ajouté
-- Support du nonce CSP dans la directive `@capScripts` : attribut `nonce`
-  sur les balises `<script>` générées ; injection de `window.CAP_SCRIPT_NONCE`
+### Added
+- CSP nonce support in the `@capScripts` directive: `nonce` attribute on the
+  generated `<script>` tags; injection of `window.CAP_SCRIPT_NONCE`
 
 ## [1.0.0] — 2026-05-07
 
-### Ajouté
-- `Cap` : service de vérification de token via `POST /siteverify`, avec
-  `verify(string $token): bool` et `verifyOrFail(string $token): void`
-- `CapServiceProvider` : enregistrement du singleton, des directives Blade
-  et du middleware
-- Directives Blade : `@cap`, `@capScripts`, `@capStyles`
-- Middleware `cap.verify` (`VerifyCap`) : rejette les requêtes avec un token
-  invalide (HTTP 422)
-- Règle de validation `CapRule`
-- Façade `Cap`
-- Exception `CapVerificationException`
-- Configuration `cap.php` : `endpoint`, `secret`, `token_field`, `timeout`,
+### Added
+- `Cap`: token verification service via `POST /siteverify`, with
+  `verify(string $token): bool` and `verifyOrFail(string $token): void`
+- `CapServiceProvider`: registers the singleton, Blade directives, and
+  middleware
+- Blade directives: `@cap`, `@capScripts`, `@capStyles`
+- `cap.verify` middleware (`VerifyCap`): rejects requests with an invalid
+  token (HTTP 422)
+- `CapRule` validation rule
+- `Cap` facade
+- `CapVerificationException`
+- `cap.php` configuration: `endpoint`, `secret`, `token_field`, `timeout`,
   `fail_open`
-- Mode `fail_open` : laisse passer les requêtes en cas d'erreur réseau ou
-  5xx, tout en refusant les tokens explicitement invalides
-- Suite de tests : `CapServiceTest`, `CapRuleTest`, `VerifyCapTest`
-- Support Laravel 11 et 12, PHP 8.2+
+- `fail_open` mode: lets requests through on network or 5xx errors, while
+  still rejecting explicitly invalid tokens
+- Test suite: `CapServiceTest`, `CapRuleTest`, `VerifyCapTest`
+- Laravel 11 and 12 support, PHP 8.2+
 
 ---
 
-[Unreleased]: https://github.com/oliweb/laravel-cap/compare/v1.8.4...HEAD
-[1.8.4]: https://github.com/oliweb/laravel-cap/compare/v1.8.3...v1.8.4
-[1.8.3]: https://github.com/oliweb/laravel-cap/compare/v1.8.2...v1.8.3
-[1.8.2]: https://github.com/oliweb/laravel-cap/compare/v1.8.1...v1.8.2
-[1.8.1]: https://github.com/oliweb/laravel-cap/compare/v1.8.0...v1.8.1
-[1.8.0]: https://github.com/oliweb/laravel-cap/compare/v1.7.2...v1.8.0
-[1.7.2]: https://github.com/oliweb/laravel-cap/compare/v1.7.1...v1.7.2
-[1.7.1]: https://github.com/oliweb/laravel-cap/compare/v1.6.1...v1.7.1
-[1.6.1]: https://github.com/oliweb/laravel-cap/compare/v1.6.0...v1.6.1
-[1.6.0]: https://github.com/oliweb/laravel-cap/compare/v1.5.6...v1.6.0
-[1.5.6]: https://github.com/oliweb/laravel-cap/compare/v1.5.5...v1.5.6
-[1.5.5]: https://github.com/oliweb/laravel-cap/compare/v1.5.4...v1.5.5
-[1.5.4]: https://github.com/oliweb/laravel-cap/compare/v1.5.3...v1.5.4
-[1.5.3]: https://github.com/oliweb/laravel-cap/compare/v1.5.2...v1.5.3
-[1.5.2]: https://github.com/oliweb/laravel-cap/compare/v1.5.1...v1.5.2
-[1.5.1]: https://github.com/oliweb/laravel-cap/compare/v1.5.0...v1.5.1
-[1.5.0]: https://github.com/oliweb/laravel-cap/compare/v1.4.0...v1.5.0
-[1.4.0]: https://github.com/oliweb/laravel-cap/compare/v1.3.0...v1.4.0
-[1.3.0]: https://github.com/oliweb/laravel-cap/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/oliweb/laravel-cap/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/oliweb/laravel-cap/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/oliweb/laravel-cap/releases/tag/v1.0.0
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.4...HEAD
+[1.8.4]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.3...v1.8.4
+[1.8.3]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.2...v1.8.3
+[1.8.2]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.1...v1.8.2
+[1.8.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.0...v1.8.1
+[1.8.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.7.2...v1.8.0
+[1.7.2]: https://github.com/oliweb-ch/laravel-cap/compare/v1.7.1...v1.7.2
+[1.7.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.6.1...v1.7.1
+[1.6.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.6.0...v1.6.1
+[1.6.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.6...v1.6.0
+[1.5.6]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.5...v1.5.6
+[1.5.5]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.4...v1.5.5
+[1.5.4]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.3...v1.5.4
+[1.5.3]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.2...v1.5.3
+[1.5.2]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.1...v1.5.2
+[1.5.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.5.0...v1.5.1
+[1.4.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.3.0...v1.4.0
+[1.3.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/oliweb-ch/laravel-cap/releases/tag/v1.0.0
