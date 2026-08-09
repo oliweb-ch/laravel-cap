@@ -6,6 +6,34 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
+## [1.10.0] — 2026-08-09
+
+### Removed
+- **Laravel 11 support dropped.** Laravel 11 reached end of security support on
+  12 March 2026. The minimum supported version is now Laravel 12.
+  - `illuminate/support` and `illuminate/http` constraints narrowed from
+    `^11.0|^12.0|^13.0` to `^12.0|^13.0`
+  - `orchestra/testbench` (require-dev) narrowed from `^9.0|^10.0|^11.0` to
+    `^10.0|^11.0`
+  - CI matrix: `laravel: 11` column and its `testbench: "^9.0"` include entry
+    removed; matrix now covers Laravel 12 and 13 only
+  - The PHP 8.2 + Laravel 13 exclusion is unchanged (Laravel 13 still requires
+    PHP ^8.3)
+- **`policy.advisories.block false` workaround removed from CI.** After dropping
+  Laravel 11, both remaining target versions (Laravel 12 / framework v12.65.0 and
+  Laravel 13 / framework v13.24.0) were tested locally with `policy.advisories.block`
+  set to `true` — `composer update` completed successfully with no security advisory
+  blocking for either. The workaround has been removed; this was observed directly
+  and not merely inferred from the Laravel 11 removal.
+
+### No functional change
+No file under `src/`, `config/`, `resources/`, or `tests/` was modified.
+Existing installations on Laravel 11 are unaffected: Composer will continue to
+resolve `oliweb/laravel-cap` to `1.9.1` (the last version compatible with
+Laravel 11) without any error or action required on their part. Future releases
+of this package will no longer be offered to Laravel 11 installations.
+
+---
 ## [1.9.1] — 2026-08-09
 
 ### Fixed
@@ -305,7 +333,8 @@ pre-correction history described above; see v1.8.6.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.7...v1.9.0
 [1.8.7]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.6...v1.8.7

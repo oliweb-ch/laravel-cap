@@ -7,7 +7,7 @@ Cap works without tracking, cookies, or third-party services. This package integ
 ## Requirements
 
 - PHP **^8.2**
-- Laravel **11, 12, or 13**
+- Laravel **12 or 13**
 - A running [Cap instance](https://trycap.dev/guide/) (self-hosted via Docker)
 
 ## Installation
