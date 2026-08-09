@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ---
+## [Unreleased]
+
+### Fixed
+- Removed a stray empty `config.policy` block left in `composer.json` after
+  local testing of the 1.10.0 advisories workaround removal. No functional
+  effect (an empty object doesn't change Composer's behavior), pure cleanup.
+
+---
 ## [1.10.0] — 2026-08-09
 
 ### Removed

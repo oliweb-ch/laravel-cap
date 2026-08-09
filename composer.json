@@ -40,9 +40,5 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true,
-    "config": {
-        "policy": {
-        }
-    }
+    "prefer-stable": true
 }
