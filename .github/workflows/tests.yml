@@ -20,6 +20,10 @@ jobs:
             testbench: "^10.0"
           - laravel: 13
             testbench: "^11.0"
+        exclude:
+          # Laravel 13 exige PHP ^8.3
+          - php: "8.2"
+            laravel: 13
 
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +45,10 @@ jobs:
 
       - name: Installer les dépendances (Laravel ${{ matrix.laravel }})
         run: |
+          # Composer 2.9+ bloque l'install si des advisories de sécurité
+          # existent sur les dépendances (feature policy.advisories.block).
+          # Les CVEs visés concernent laravel/framework et non ce package.
+          composer config --no-interaction policy.advisories.block false
           composer require \
             "illuminate/support:^${{ matrix.laravel }}" \
             "illuminate/http:^${{ matrix.laravel }}" \
