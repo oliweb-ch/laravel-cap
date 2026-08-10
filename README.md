@@ -179,7 +179,7 @@ When Cap's instrumentation is enabled, the widget requires `'unsafe-eval'` in `s
 
 <form @submit.prevent="submitWithCap">
     @csrf
-    @capFrame(Vite::cspNonce())
+    @capFrame
     <button type="submit">Submit</button>
 </form>
 ```
@@ -189,18 +189,20 @@ This renders:
 ```html
 <input type="hidden" name="cap-token" id="cap-frame-token">
 <iframe src="/cap-frame" id="cap-frame"
-        style="border:none;overflow:hidden;width:300px;height:58px;"
-        title="Cap CAPTCHA" loading="lazy"></iframe>
-<script nonce="…">
+        style="width:0;height:0;border:0;overflow:hidden;"
+        title="Cap CAPTCHA" aria-hidden="true"></iframe>
+<script>
 (function(){
   window.addEventListener('message', function(e) {
     if (e.origin !== window.location.origin) return;
+    var _f = document.getElementById('cap-frame');
+    if (!_f || e.source !== _f.contentWindow) return;
     if (!e.data || e.data.type !== 'cap:token') return;
     document.getElementById('cap-frame-token').value = e.data.token;
   });
   window.capSolve = function() {
     document.getElementById('cap-frame').contentWindow
-      .postMessage({ type: 'cap:start' }, window.location.origin);
+      .postMessage({type: 'cap:start'}, window.location.origin);
   };
 })();
 </script>
@@ -232,10 +234,10 @@ window.addEventListener('message', (e) => {
 });
 ```
 
-**Without nonce** (if your CSP does not use nonces):
+**With nonce** (if your CSP uses nonces):
 
 ```blade
-@capFrame
+@capFrame(Vite::cspNonce())
 ```
 
 **Customising the route path** — set `CAP_FRAME_ROUTE` in `.env`:
