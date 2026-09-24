@@ -36,8 +36,17 @@ This publishes the following files to `public/vendor/cap/`:
 |------|-------------|
 | `cap-widget.js` | Cap widget (custom element + programmatic API) |
 | `cap-widget.css` | Default widget styles |
-| `cap_wasm_bg.wasm` | WebAssembly binary for proof-of-work (served locally, no CDN required) |
+| `cap_wasm_bg.wasm` | WebAssembly binary for rsw proof-of-work |
 | `cap_wasm.js` | JS loader for the WASM module |
+| `hashwx.wasm` | WebAssembly binary for hashwx proof-of-work (GPU-resistant, default since Cap 3.1.12) |
+
+### Upgrading assets
+
+After `composer update oliweb/laravel-cap`, re-publish assets with `--force` to overwrite the files in `public/vendor/cap/` with the versions bundled in the new package:
+
+```bash
+php artisan vendor:publish --tag=cap-assets --force
+```
 
 Publish the translation files (optional — to override messages):
 
@@ -115,7 +124,7 @@ cap-widget {
 | Directive | Description |
 |-----------|-------------|
 | `@cap` | Renders `<cap-widget>` with the configured endpoint |
-| `@capScripts` | Injects `window.CAP_CUSTOM_WASM_URL` + `<script type="module">` for the widget |
+| `@capScripts` | Injects `window.CAP_CUSTOM_WASM_URL`, `window.CAP_CUSTOM_HASHWX_URL` + `<script type="module">` for the widget |
 | `@capStyles` | `<link>` loading the theme from `public/vendor/cap/cap-widget.css` |
 | `@capConfig` | `<script>` exposing `window.CAP_API_ENDPOINT` and `window.CAP_TOKEN_FIELD` |
 | `@capFrame` | Renders the Cap widget in an isolated iframe with a permissive CSP — the parent page keeps a strict CSP without `'unsafe-eval'` |
@@ -137,7 +146,7 @@ Include the Cap widget in any Blade form:
 
 The widget automatically injects a hidden `cap-token` field (or the value of `CAP_TOKEN_FIELD`) into its parent form upon successful verification.
 
-`@capScripts` always injects `window.CAP_CUSTOM_WASM_URL` pointing to the locally published WASM, so no external CDN is contacted at runtime.
+`@capScripts` always injects `window.CAP_CUSTOM_WASM_URL` and `window.CAP_CUSTOM_HASHWX_URL` pointing to the locally published WASM files, so no external CDN is contacted at runtime.
 
 #### Programmatic mode
 
