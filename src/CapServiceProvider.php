@@ -38,6 +38,7 @@ class CapServiceProvider extends ServiceProvider
                 __DIR__ . '/../resources/css/cap-widget.css'        => public_path('vendor/cap/cap-widget.css'),
                 __DIR__ . '/../resources/wasm/cap_wasm_bg.wasm'     => public_path('vendor/cap/cap_wasm_bg.wasm'),
                 __DIR__ . '/../resources/wasm/cap_wasm.js'          => public_path('vendor/cap/cap_wasm.js'),
+                __DIR__ . '/../resources/wasm/hashwx.wasm'          => public_path('vendor/cap/hashwx.wasm'),
             ], 'cap-assets');
 
             $this->publishes([
@@ -78,9 +79,9 @@ class CapServiceProvider extends ServiceProvider
 
         Blade::directive('capScripts', function (string $expression) {
             if (empty(trim($expression))) {
-                return "<?php echo '<script>window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . '</script>' . '<script type=\"module\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
+                return "<?php echo '<script>window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . ';window.CAP_CUSTOM_HASHWX_URL=' . json_encode(asset('vendor/cap/hashwx.wasm')) . '</script>' . '<script type=\"module\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
             }
-            return "<?php echo '<script nonce=\"' . e({$expression}) . '\">window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . ';window.CAP_SCRIPT_NONCE=' . json_encode({$expression}) . ';</script>' . '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
+            return "<?php echo '<script nonce=\"' . e({$expression}) . '\">window.CAP_CUSTOM_WASM_URL=' . json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) . ';window.CAP_CUSTOM_HASHWX_URL=' . json_encode(asset('vendor/cap/hashwx.wasm')) . ';window.CAP_SCRIPT_NONCE=' . json_encode({$expression}) . ';</script>' . '<script type=\"module\" nonce=\"' . e({$expression}) . '\" src=\"' . e(asset('vendor/cap/cap-widget.js')) . '\"></script>'; ?>";
         });
 
         Blade::directive('capFrame', function (string $expression) {
