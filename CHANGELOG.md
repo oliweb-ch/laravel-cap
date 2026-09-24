@@ -8,6 +8,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+## [1.11.0] — 2026-09-24
+
+### Added
+- **`hashwx` protocol support** (Cap standalone ≥ 3.1.12). New keys created on a
+  3.1.12+ instance default to `hashwx` (GPU-resistant PoW, 4 sub-challenges).
+  Existing `rsw` keys continue to work unchanged.
+- **`hashwx.wasm`** added to the publishable asset group
+  (`php artisan vendor:publish --tag=cap-assets`). Published to
+  `public/vendor/cap/hashwx.wasm`.
+- **`window.CAP_CUSTOM_HASHWX_URL`** injected by `@capScripts` (with and without
+  nonce), pointing to `public/vendor/cap/hashwx.wasm`. Eliminates the jsDelivr
+  dependency for hashwx keys under strict CSP policies.
+- **`resources/views/frame.blade.php`**: `window.CAP_CUSTOM_HASHWX_URL` added to
+  the pre-module globals block, consistent with the existing `CAP_CUSTOM_WASM_URL`
+  handling in iframe mode.
+
+### Changed
+- JS/WASM assets updated to `@cap.js/widget@0.1.58` and `@cap.js/wasm@0.0.8`
+  (required for hashwx keys).
+
 ### Fixed
 - Removed a stray empty `config.policy` block left in `composer.json` after
   local testing of the 1.10.0 advisories workaround removal. No functional
@@ -349,7 +369,8 @@ pre-correction history described above; see v1.8.6.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.1...v1.10.0
 [1.9.1]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.8.7...v1.9.0
