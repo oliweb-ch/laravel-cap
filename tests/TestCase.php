@@ -1,7 +1,5 @@
 <?php
-
 namespace LaravelCap\Tests;
-
 use LaravelCap\CapServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -9,9 +7,7 @@ abstract class TestCase extends Orchestra
 {
     protected function getPackageProviders($app): array
     {
-        return [
-            CapServiceProvider::class,
-        ];
+        return [CapServiceProvider::class];
     }
 
     protected function defineEnvironment($app): void
@@ -21,5 +17,8 @@ abstract class TestCase extends Orchestra
         $app['config']->set('cap.token_field', 'cap-token');
         $app['config']->set('cap.timeout', 5);
         $app['config']->set('cap.fail_open', false);
+        $app['config']->set('cap.alerts.mail', null);
+        $app['config']->set('cap.alerts.throttle_minutes', 15);
+        $app['config']->set('cache.default', 'array');
     }
 }

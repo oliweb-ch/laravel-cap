@@ -70,4 +70,21 @@ return [
     |
     */
     'frame_route' => env('CAP_FRAME_ROUTE', 'cap-frame'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Alertes administrateur
+    |--------------------------------------------------------------------------
+    |
+    | Adresse e-mail à notifier quand le serveur Cap est inaccessible ou mal
+    | configuré. Laisser null (défaut) pour désactiver les notifications.
+    |
+    | throttle_minutes : intervalle minimum en minutes entre deux alertes du
+    | même type (serveur inaccessible, mauvaise config).
+    |
+    */
+    'alerts' => [
+        'mail'             => env('CAP_ALERT_MAIL'),
+        'throttle_minutes' => (int) env('CAP_ALERT_THROTTLE_MINUTES', 15),
+    ],
 ];

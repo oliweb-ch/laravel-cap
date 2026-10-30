@@ -3,6 +3,8 @@
 namespace LaravelCap;
 
 use Illuminate\Http\Client\Factory as HttpFactory;
+use LaravelCap\Events\CapMisconfigured;
+use LaravelCap\Events\CapServerUnreachable;
 use LaravelCap\Exceptions\CapVerificationException;
 
 class Cap
@@ -12,9 +14,6 @@ class Cap
         private readonly array $config,
     ) {}
 
-    /**
-     * Vérifie un token Cap auprès de l'instance distante.
-     */
     public function verify(string $token): bool
     {
         try {
@@ -25,11 +24,31 @@ class Cap
                     'secret'   => $this->config['secret'],
                     'response' => $token,
                 ]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            event(new CapServerUnreachable(
+                endpoint: $this->siteVerifyUrl(),
+                failOpen: $this->failOpen(),
+                exceptionMessage: $e->getMessage(),
+                occurredAt: new \DateTimeImmutable(),
+            ));
             return $this->failOpen();
         }
 
-        if ($response->failed()) {
+        if ($response->serverError()) {
+            event(new CapServerUnreachable(
+                endpoint: $this->siteVerifyUrl(),
+                failOpen: $this->failOpen(),
+                exceptionMessage: 'HTTP ' . $response->status(),
+                occurredAt: new \DateTimeImmutable(),
+            ));
+            return $this->failOpen();
+        }
+
+        if ($response->clientError()) {
+            event(new CapMisconfigured(
+                endpoint: $this->siteVerifyUrl(),
+                statusCode: $response->status(),
+            ));
             return $this->failOpen();
         }
 
@@ -41,11 +60,6 @@ class Cap
         return (bool) ($this->config['fail_open'] ?? false);
     }
 
-    /**
-     * Vérifie un token Cap et lève une exception en cas d'échec.
-     *
-     * @throws CapVerificationException
-     */
     public function verifyOrFail(string $token): void
     {
         if (! $this->verify($token)) {

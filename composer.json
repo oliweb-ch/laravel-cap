@@ -1,9 +1,15 @@
 {
     "name": "oliweb/laravel-cap",
-    "description": "Laravel wrapper for Cap (tiagozip/cap) — self-hosted CAPTCHA alternative",
+    "description": "Laravel wrapper for Cap (tiagozip/cap) \u2014 self-hosted CAPTCHA alternative",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "captcha", "cap", "proof-of-work", "spam-protection"],
+    "keywords": [
+        "laravel",
+        "captcha",
+        "cap",
+        "proof-of-work",
+        "spam-protection"
+    ],
     "authors": [
         {
             "name": "oliweb",
@@ -13,7 +19,11 @@
     "require": {
         "php": "^8.2",
         "illuminate/support": "^12.0|^13.0",
-        "illuminate/http": "^12.0|^13.0"
+        "illuminate/http": "^12.0|^13.0",
+        "illuminate/events": "^12.0|^13.0",
+        "illuminate/cache": "^12.0|^13.0",
+        "illuminate/notifications": "^12.0|^13.0",
+        "illuminate/console": "^12.0|^13.0"
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
