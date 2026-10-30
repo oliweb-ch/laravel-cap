@@ -516,6 +516,269 @@ class ContactController extends Controller
 
 `verifyOrFail()` throws a `CapVerificationException` if the token is invalid.
 
+
+## Livewire integration
+
+> **Requirement**: `livewire/livewire ^4.0`. Livewire is an optional dependency — the
+> package works fully without it.
+
+### Installation
+
+```bash
+composer require livewire/livewire
+```
+
+The `<x-cap::livewire>` component and `WithCap` trait are registered automatically by
+`CapServiceProvider` when Livewire is detected.
+
+### Component `<x-cap::livewire>`
+
+Drop the component in any Livewire template and bind it to a string property via
+`wire:model`:
+
+```blade
+<x-cap::livewire wire:model="capToken" />
+```
+
+With a CSP nonce:
+
+```blade
+<x-cap::livewire wire:model="capToken" :nonce="$nonce" />
+```
+
+The component renders the `<cap-widget>` inside a `wire:ignore` container (survives
+Livewire's DOM morphing). The resolved token is synced to the bound Livewire property
+via Alpine + `$wire.set()` without triggering an intermediate network request. The
+widget automatically resets when the `cap-reset` browser event is dispatched.
+
+### `WithCap` trait
+
+Add `WithCap` to your Livewire component to get server-side Cap verification and
+automatic widget reset on failure:
+
+```php
+use Livewire\Component;
+use LaravelCap\Livewire\WithCap;
+
+class ContactForm extends Component
+{
+    use WithCap;
+
+    public string $capToken = '';
+    public string $name = '';
+    public string $email = '';
+
+    public function submit(): void
+    {
+        // Validate other fields first — avoids consuming the Cap token
+        // if a simple required/email check fails
+        $this->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email',
+        ]);
+
+        // Verify the Cap token server-side (single-use, cleared on success)
+        $this->validateCap();
+
+        // Process the form...
+        $this->dispatch('form-submitted');
+    }
+
+    public function render()
+    {
+        return view('livewire.contact-form');
+    }
+}
+```
+
+```blade
+{{-- resources/views/livewire/contact-form.blade.php --}}
+<form wire:submit="submit">
+    <div>
+        <input type="text" wire:model="name" placeholder="Name" />
+    </div>
+    <div>
+        <input type="email" wire:model="email" placeholder="Email" />
+    </div>
+
+    <x-cap::livewire wire:model="capToken" />
+
+    <button type="submit">Send</button>
+</form>
+```
+
+#### Available methods
+
+| Method | Description |
+|---|---|
+| `validateCap(string $property = 'capToken')` | Verifies the token via `CapRule`. Throws `ValidationException` if invalid. Clears the token on success. |
+| `resetCap(string $property = 'capToken')` | Clears the token server-side and dispatches `cap-reset` to reset the widget. |
+
+#### Automatic reset on failure
+
+The trait's `exception()` Livewire lifecycle hook automatically calls `resetCap()` on
+any `ValidationException`, even if the error comes from a different field. The widget is
+always reset after a failed submission, forcing the user to solve the CAPTCHA again.
+
+> **Validation order**: call `validateCap()` **after** `$this->validate()` for other
+> fields. This way, if `name` or `email` fails, the Cap token is reset by the
+> `exception()` hook but was never consumed by the Cap server. The user solves the
+> CAPTCHA only once per successful submission.
+
+### Security note
+
+> `capToken` is a public property (required for `wire:model`). Its value is always
+> verified server-side against the Cap API on every submission — a client-side
+> modification cannot bypass verification. Never store a boolean "captcha solved" state
+> in an unprotected public property.
+
+## Inertia integration
+
+No package-side changes are needed for Inertia: `CapRule` and the `cap.verify`
+middleware apply to Inertia requests exactly like regular form requests.
+
+### Vue 3 setup
+
+Declare `cap-widget` as a custom element in your Vite config to prevent Vue from
+warning about an unknown component:
+
+```js
+// vite.config.js
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+
+export default defineConfig({
+    plugins: [
+        vue({
+            template: {
+                compilerOptions: {
+                    isCustomElement: (tag) => tag === 'cap-widget',
+                },
+            },
+        }),
+    ],
+})
+```
+
+Pass `config('cap.endpoint')` to the front end via your Inertia shared data or as a
+page prop:
+
+```php
+// In your controller:
+return Inertia::render('ContactForm', [
+    'capEndpoint' => config('cap.endpoint'),
+]);
+```
+
+**Vue 3 example** (Inertia.js v2, `@inertiajs/vue3`):
+
+```vue
+<script setup>
+import { useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
+
+const props = defineProps({ capEndpoint: String })
+
+const form = useForm({
+    name: '',
+    email: '',
+    'cap-token': '',
+})
+
+const capWidget = ref(null)
+
+function onCapSolve(event) {
+    form['cap-token'] = event.detail.token
+}
+
+function submit() {
+    form.post(route('contact.store'), {
+        onError() {
+            // Always reset — the token is single-use
+            form['cap-token'] = '';
+            capWidget.value?.reset()
+        },
+    })
+}
+</script>
+
+<template>
+    <form @submit.prevent="submit">
+        <input v-model="form.name" type="text" placeholder="Name" />
+        <input v-model="form.email" type="email" placeholder="Email" />
+
+        <cap-widget
+            ref="capWidget"
+            :data-cap-api-endpoint="props.capEndpoint"
+            @solve="onCapSolve"
+        />
+
+        <button type="submit" :disabled="form.processing">Send</button>
+    </form>
+</template>
+```
+
+**React 19 example** (Inertia.js v2, `@inertiajs/react`):
+
+```jsx
+import { useForm } from '@inertiajs/react'
+import { useRef, useEffect } from 'react'
+
+export default function ContactForm({ capEndpoint }) {
+    const capRef = useRef(null)
+    const { data, setData, post, processing } = useForm({
+        name: '',
+        email: '',
+        'cap-token': '',
+    })
+
+    useEffect(() => {
+        const widget = capRef.current
+        if (!widget) return
+        const handleSolve = (e) => setData('cap-token', e.detail.token)
+        widget.addEventListener('solve', handleSolve)
+        return () => widget.removeEventListener('solve', handleSolve)
+    }, [])
+
+    function submit(e) {
+        e.preventDefault()
+        post(route('contact.store'), {
+            onError() {
+                // Always reset — the token is single-use
+                setData('cap-token', '')
+                capRef.current?.reset()
+            },
+        })
+    }
+
+    return (
+        <form onSubmit={submit}>
+            <input value={data.name} onChange={e => setData('name', e.target.value)} placeholder="Name" />
+            <input value={data.email} onChange={e => setData('email', e.target.value)} placeholder="Email" />
+            <cap-widget ref={capRef} data-cap-api-endpoint={capEndpoint} />
+            <button type="submit" disabled={processing}>Send</button>
+        </form>
+    )
+}
+```
+
+> **Note on React events**: React 19 does not forward custom DOM events (`solve`,
+> `reset`) through JSX props. Use `addEventListener` via a `useEffect` + ref as shown
+> above instead of `onSolve={…}`.
+
+---
+
+> #### Single-use token — Inertia gotcha
+>
+> Inertia intercepts HTTP 422 responses and surfaces field errors without a full page
+> reload. The Cap token submitted with the form has already been **consumed** by the
+> server — even if the error is on a completely different field (`name`, `email`, …).
+>
+> **You must always call `widget.reset()` and clear the token field in `onError`**, or
+> the next submission will fail with an invalid-token error regardless of whether the
+> CAPTCHA was solved correctly.
+
+
 ## Testing
 
 ```bash

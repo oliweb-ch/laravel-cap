@@ -8,6 +8,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+## [1.13.0] — 2026-10-30
+
+### Added
+- **Livewire 4 integration** (optional — `livewire/livewire ^4.0` is a suggested
+  dependency, not required; no code is loaded when Livewire is absent).
+- **`<x-cap::livewire wire:model="capToken" />`** Blade component: renders a
+  `<cap-widget>` inside a `wire:ignore` container (survives DOM morphing), syncs
+  the resolved token to the bound Livewire property via Alpine + `$wire.set()`
+  without triggering an intermediate network request. CSP nonce supported via
+  `:nonce` prop.
+- **`WithCap` trait** (`LaravelCap\Livewire\WithCap`): provides `validateCap()` to
+  verify the Cap token server-side in the submit action using the existing `CapRule`.
+  The token is cleared after every call (single-use guarantee). The `exception()`
+  Livewire lifecycle hook automatically clears the token and dispatches the `cap-reset`
+  browser event on any `ValidationException` — including exceptions from other fields —
+  causing the widget to reset.
+- **Inertia documentation**: Vue 3 and React 19 examples using `useForm` (Inertia.js
+  v2). Includes the `isCustomElement` Vite config, `addEventListener` pattern for React,
+  and a callout on the single-use token + `onError` reset requirement.
+
 ## [1.12.0] — 2026-10-30
 
 ### Added
@@ -19,7 +39,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `endpoint`, `statusCode`. A token explicitly rejected (`success: false`) never
   triggers an event.
 - **`SendCapAlertMail` listener** (optional, queued): sends an e-mail alert via
-  `Notification::route` when `cap.alerts.mail` is set. Throttled per event
+  `Notification::route(\'mail\', …)` when `cap.alerts.mail` is set. Throttled per event
   type via `Cache::add()` (configurable via `cap.alerts.throttle_minutes`, default 15 min).
   Registered automatically only when an alert address is configured. Mail in EN and FR,
   mentions whether fail-open is active.
@@ -33,11 +53,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   `alert_misconfigured_*`) in EN and FR.
 
 ### Changed
-- `Cap::verify()` now distinguishes between server errors (5xx / exception =`>
-  `CapServerUnreachable`) and client errors (4xx =>
-  `CapMisconfigured`) before falling back to `failOpen()`. Behavior is unchanged: fail-open/closed logic
+- `Cap::verify()` now distinguishes between server errors (5xx / exception →
+  `CapServerUnreachable`) and client errors (4xx → `CapMisconfigured`) before
+  falling back to `failOpen()`. Behavior is unchanged: fail-open/closed logic
   applies in both cases as before.
-
 ## [1.11.0] — 2026-09-24
 
 ### Added
@@ -399,7 +418,8 @@ pre-correction history described above; see v1.8.6.
 
 ---
 
-[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/oliweb-ch/laravel-cap/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/oliweb-ch/laravel-cap/compare/v1.9.1...v1.10.0
