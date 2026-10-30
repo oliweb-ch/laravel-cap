@@ -55,6 +55,7 @@ class CapServiceProvider extends ServiceProvider
         $this->registerBladeDirectives();
         $this->registerAlertsListener();
         $this->registerCommands();
+        $this->registerLivewireComponent();
     }
 
     private function registerRoute(): void
@@ -227,5 +228,19 @@ class CapServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([\LaravelCap\Console\Commands\CapCheckCommand::class]);
         }
+    }
+
+    private function registerLivewireComponent(): void
+    {
+        if (! class_exists(\Livewire\Component::class)) {
+            return;
+        }
+
+        $this->callAfterResolving('blade.compiler', function () {
+            Blade::component(
+                \LaravelCap\View\Components\CapLivewire::class,
+                'cap::livewire'
+            );
+        });
     }
 }

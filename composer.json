@@ -49,6 +49,9 @@
             }
         }
     },
+    "suggest": {
+        "livewire/livewire": "Livewire 4 integration: <x-cap::livewire> component and WithCap trait (^4.0)"
+    },
     "minimum-stability": "stable",
     "prefer-stable": true
 }
