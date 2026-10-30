@@ -53,6 +53,8 @@ class CapServiceProvider extends ServiceProvider
         $this->registerRoute();
         $this->registerMiddleware();
         $this->registerBladeDirectives();
+        $this->registerAlertsListener();
+        $this->registerCommands();
     }
 
     private function registerRoute(): void
@@ -202,5 +204,28 @@ class CapServiceProvider extends ServiceProvider
                 . 'window.CAP_TOKEN_FIELD=' . json_encode(config('cap.token_field', 'cap-token')) . ';'
                 . '</script>'; ?>";
         });
+    }
+
+    private function registerAlertsListener(): void
+    {
+        if (! config('cap.alerts.mail')) {
+            return;
+        }
+
+        $this->app->make('events')->listen(
+            \LaravelCap\Events\CapServerUnreachable::class,
+            [\LaravelCap\Listeners\SendCapAlertMail::class, 'handleServerUnreachable'],
+        );
+        $this->app->make('events')->listen(
+            \LaravelCap\Events\CapMisconfigured::class,
+            [\LaravelCap\Listeners\SendCapAlertMail::class, 'handleMisconfigured'],
+        );
+    }
+
+    private function registerCommands(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([\LaravelCap\Console\Commands\CapCheckCommand::class]);
+        }
     }
 }

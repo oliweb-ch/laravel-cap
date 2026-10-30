@@ -103,6 +103,128 @@ return [
 
 Laravel selects the right file automatically based on `App::getLocale()`.
 
+
+## Alerts & Monitoring
+
+When the Cap server becomes unreachable or is misconfigured, `laravel-cap` dispatches
+Laravel events that you can listen to in your application. An optional built-in listener
+sends you an e-mail alert automatically.
+
+### Events
+
+#### `CapServerUnreachable`
+
+Dispatched when the Cap server cannot be reached:
+- Connection refused, timeout, DNS failure (caught `\Throwable`)
+- HTTP 5xx response from `/siteverify`
+
+| Property | Type | Description |
+|---|---|---|
+| `$endpoint` | `string` | The `/siteverify` URL that was called (no secret) |
+| `$failOpen` | `bool` | Whether fail-open is active (CAPTCHA inactive when `true`) |
+| `$exceptionMessage` | `string` | Error message or HTTP status (e.g. `HTTP 503`) |
+| `$occurredAt` | `\DateTimeImmutable` | Timestamp of the failure |
+
+#### `CapMisconfigured`
+
+Dispatched when `/siteverify` returns an HTTP 4xx response, indicating a configuration
+problem (wrong secret, wrong site key, wrong endpoint):
+
+| Property | Type | Description |
+|---|---|---|
+| `$endpoint` | `string` | The URL that was called (no secret) |
+| `$statusCode` | `int` | HTTP status code (401, 403, 404, ...) |
+
+> **Never triggers an alert**: a token explicitly refused by the server (`success: false`)
+> is normal operation and dispatches no event.
+
+### Built-in mail listener
+
+Activate by setting `CAP_ALERT_MAIL` in your `.env`:
+
+```env
+CAP_ALERT_MAIL=admin@example.com
+CAP_ALERT_THROTTLE_MINUTES=15   # optional, default 15
+```
+
+The listener (`SendCapAlertMail`):
+- Implements `ShouldQueue` -- processed by your queue worker
+- Sends one notification per event type per throttle window (default 15 min)
+- Mail is sent via `Notification::route` -- no `User` model required
+- Mentions whether fail-open is active (i.e. whether CAPTCHA protection is currently off)
+- Available in English and French (follows your application locale)
+
+The listener is only registered when `cap.alerts.mail` is configured. If the key is
+absent or `null`, no listener is registered and no overhead is incurred.
+
+### Custom listeners
+
+Listen to these events in your `AppServiceProvider` or `EventServiceProvider`:
+
+```php
+use LaravelCap\Events\CapServerUnreachable;
+use LaravelCap\Events\CapMisconfigured;
+
+// In boot():
+Event::listen(CapServerUnreachable::class, function ($event) {
+    // Slack, PagerDuty, custom log...
+    Log::critical("Cap server unreachable", [
+        "endpoint"  => $event->endpoint,
+        "fail_open" => $event->failOpen,
+        "error"     => $event->exceptionMessage,
+    ]);
+});
+
+Event::listen(CapMisconfigured::class, function ($event) {
+    Log::error("Cap misconfigured", [
+        "endpoint" => $event->endpoint,
+        "http"     => $event->statusCode,
+    ]);
+});
+```
+
+### `cap:check` command
+
+Probes the Cap server health endpoint (`GET /health`) and exits with a meaningful code:
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Server healthy (`{"status":"ok"}`) |
+| `1` | Server unreachable (connection error, timeout) |
+| `2` | Server reachable but unhealthy (`{"status":"unavailable"}`) |
+
+```bash
+php artisan cap:check
+```
+
+With `--notify`, dispatches the same events as a live request failure (useful for testing
+your alert pipeline):
+
+```bash
+php artisan cap:check --notify
+```
+
+**Scheduler integration** -- add to `routes/console.php`:
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command("cap:check --notify")
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->emailOutputOnFailure("admin@example.com"); // optional fallback
+```
+
+### Configuration reference
+
+```php
+// config/cap.php
+'alerts' => [
+    'mail'             => env('CAP_ALERT_MAIL'),           // null = disabled
+    'throttle_minutes' => (int) env('CAP_ALERT_THROTTLE_MINUTES', 15),
+],
+```
+
 ## Widget styling
 
 Edit `public/vendor/cap/cap-widget.css` to override the CSS custom properties exposed by the widget:
