@@ -109,6 +109,18 @@ class CapServiceTest extends TestCase
         $this->assertFalse($this->capWithFailOpen()->verify('invalid-token'));
     }
 
+    #[Test]
+    public function it_returns_false_on_http_client_error_even_when_fail_open(): void
+    {
+        // Un 4xx (ex: token rejoué, secret invalide) n'est pas une défaillance
+        // d'infrastructure : fail_open ne doit pas laisser passer la requête.
+        Http::fake([
+            'https://cap.test/site-key/siteverify' => Http::response([], 400),
+        ]);
+
+        $this->assertFalse($this->capWithFailOpen()->verify('replayed-token'));
+    }
+
     // -------------------------------------------------------------------------
     // Cas limites : endpoint sans slash final
     // -------------------------------------------------------------------------

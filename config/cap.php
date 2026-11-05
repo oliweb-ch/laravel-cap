@@ -49,10 +49,10 @@ return [
     | Mode fail-open
     |--------------------------------------------------------------------------
     |
-    | Quand true, toute erreur de communication vers l'instance Cap (réseau,
+    | Quand true, toute erreur d'infrastructure vers l'instance Cap (réseau,
     | timeout, erreur serveur 5xx) laisse passer la requête plutôt que de la
-    | bloquer. Un token explicitement invalide (success: false) est toujours
-    | refusé, quel que soit ce paramètre.
+    | bloquer. Les erreurs 4xx (token invalide/rejoué, secret incorrect) et les
+    | réponses success: false sont toujours refusées, quel que soit ce paramètre.
     |
     | Recommandé en production si la disponibilité du service prime sur la
     | sécurité anti-spam.

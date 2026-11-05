@@ -143,8 +143,10 @@ class CapAlertsTest extends TestCase
     }
 
     #[Test]
-    public function fail_open_returns_true_on_4xx_and_misconfigured_event_is_dispatched(): void
+    public function fail_open_returns_false_on_4xx_but_misconfigured_event_is_still_dispatched(): void
     {
+        // Un 4xx n'est pas une défaillance d'infrastructure : fail_open ne doit
+        // pas laisser passer la requête. L'événement est quand même dispatché.
         Event::fake();
         Http::fake(['*' => Http::response([], 403)]);
 
@@ -153,7 +155,7 @@ class CapAlertsTest extends TestCase
 
         $result = app(Cap::class)->verify('any-token');
 
-        $this->assertTrue($result);
+        $this->assertFalse($result);
         Event::assertDispatched(CapMisconfigured::class);
     }
 

@@ -8,6 +8,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+## [1.13.1] — 2026-11-05
+
+### Fixed
+- **`fail_open` ne laisse plus passer les erreurs 4xx** (closes #2). Une réponse
+  4xx du serveur Cap (ex: token rejoué, secret invalide) est une réponse
+  applicative, pas une défaillance d'infrastructure : `fail_open` n'a pas
+  vocation à couvrir ce cas. L'événement `CapMisconfigured` est toujours
+  dispatché, mais `verify()` retourne désormais `false` inconditionnellement
+  pour toute erreur cliente, quel que soit l'état de `fail_open`.
+
 ## [1.13.0] — 2026-10-30
 
 ### Added

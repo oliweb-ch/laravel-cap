@@ -49,7 +49,9 @@ class Cap
                 endpoint: $this->siteVerifyUrl(),
                 statusCode: $response->status(),
             ));
-            return $this->failOpen();
+            // fail_open ne couvre pas les erreurs 4xx : le serveur Cap est joignable
+            // et répond — ce n'est pas une défaillance d'infrastructure.
+            return false;
         }
 
         return (bool) ($response->json('success') ?? false);

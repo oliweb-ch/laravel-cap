@@ -81,7 +81,7 @@ By default, any communication error with the Cap instance (network failure, time
 
 Setting `CAP_FAIL_OPEN=true` inverts this: communication errors silently pass, so a Cap outage does not take your forms down with it.
 
-**An explicitly invalid token (`success: false`) is always rejected regardless of this setting.** Fail-open only covers infrastructure failures, not verification failures.
+**An explicitly invalid token (`success: false`) is always rejected regardless of this setting.** Fail-open only covers infrastructure failures (network, timeout, HTTP 5xx), not verification failures. HTTP 4xx responses (replayed token, wrong secret, misconfigured endpoint) are also always rejected regardless of this setting.
 
 ## Translations
 
