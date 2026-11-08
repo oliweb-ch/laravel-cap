@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     {{-- Les URLs WASM doivent être définies avant le chargement du module --}}
-    <script>window.CAP_CUSTOM_WASM_URL = {!! json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) !!};window.CAP_CUSTOM_HASHWX_URL = {!! json_encode(asset('vendor/cap/hashwx.wasm')) !!};</script>
+    <script>window.CAP_CUSTOM_WASM_URL = {!! json_encode(asset('vendor/cap/cap_wasm_bg.wasm')) !!};window.CAP_CUSTOM_HASHWX_URL = {!! json_encode(asset('vendor/cap/hashwx.wasm')) !!};window.CAP_ISOLATE = true;</script>
     <script type="module" src="{{ asset('vendor/cap/cap-widget.js') }}"></script>
 </head>
 <body>
