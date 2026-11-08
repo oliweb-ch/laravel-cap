@@ -115,4 +115,21 @@ class CapBladeDirectivesTest extends TestCase
         $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
         $this->assertStringContainsString('&lt;script&gt;', $html);
     }
+
+    #[Test]
+    public function capConfig_directive_reads_config_at_render_time(): void
+    {
+        // Premier rendu avec la config par défaut du TestCase
+        $html1 = Blade::render('@capConfig');
+        $this->assertStringContainsString('cap.test', $html1);
+
+        // Changement de config après le premier rendu
+        $this->app['config']->set('cap.endpoint', 'https://new-endpoint.example.com/key/');
+
+        // Le second rendu doit refléter la nouvelle valeur
+        // (régression : si la valeur était baked à la compilation Blade, ce test échouerait)
+        $html2 = Blade::render('@capConfig');
+        $this->assertStringContainsString('new-endpoint.example.com', $html2);
+        $this->assertStringNotContainsString('cap.test', $html2);
+    }
 }
