@@ -48,6 +48,15 @@ After `composer update oliweb/laravel-cap`, re-publish assets with `--force` to 
 php artisan vendor:publish --tag=cap-assets --force
 ```
 
+### Upgrading the Cap server to capd v4
+
+`capd@4.0.0` (formerly "Cap Standalone") requires a manual secret reset for each site key.
+Until you do so, `/siteverify` returns HTTP 403 and every token verification will fail.
+
+Navigate to **Cap dashboard → your site key → Settings → Danger zone → Reset secret**, then update `CAP_SECRET` in your `.env`.
+
+> `laravel-cap` handles 403 responses as a configuration error: the `CapMisconfigured` event is dispatched and, if `CAP_ALERT_MAIL` is set, an alert e-mail is sent.
+
 Publish the translation files (optional — to override messages):
 
 ```bash
@@ -339,7 +348,7 @@ This renders:
 </script>
 ```
 
-**`/cap-frame` route** is registered automatically by the service provider. Its `Content-Security-Policy` header includes `'unsafe-eval'`, `'wasm-unsafe-eval'`, `blob:`, and `img-src data:` — everything Cap needs — while `frame-ancestors 'self'` prevents embedding from external origins.
+**`/cap-frame` route** is registered automatically by the service provider. Its `Content-Security-Policy` header includes `'unsafe-eval'`, `'wasm-unsafe-eval'`, `blob:`, and `img-src data:` — everything Cap needs — while `frame-ancestors 'self'` prevents embedding from external origins. `window.CAP_ISOLATE = true` is set inside the frame so the instrumentation sub-iframe runs in a fully sandboxed opaque origin.
 
 **Token flow:**
 
@@ -443,8 +452,8 @@ Content-Security-Policy:
 > **Instrumentation and strict CSP**
 >
 > Cap's optional **instrumentation** feature (enabled per site key in the Cap admin dashboard) runs
-> fingerprinting code inside a sandboxed iframe. Since Cap v3.x this code calls `eval()` and
-> `new Function()`, which are blocked by a `script-src` without `'unsafe-eval'`.
+> fingerprinting code inside a sandboxed iframe. This code calls `eval()` and `new Function()`,
+> which are blocked by a `script-src` without `'unsafe-eval'`.
 >
 > If instrumentation is enabled and `'unsafe-eval'` is absent from your CSP, the widget will
 > report an `[instr_timeout]` error and the Cap server will return HTTP 429, making every
@@ -452,13 +461,14 @@ Content-Security-Policy:
 >
 > **Recommended workaround:** use [`@capFrame`](#iframe-mode-strict-csp--no-unsafe-eval) — the widget
 > runs in a dedicated iframe with its own permissive CSP, leaving the parent page CSP strict.
+> `CAP_ISOLATE = true` is set automatically inside the iframe for an extra sandboxing layer.
 >
 > **Alternative workarounds:**
-> - Disable instrumentation for the site key in the Cap admin dashboard
->   (`PUT /keys/:siteKey/config` with `{"instrumentation": false}`).
+> - Set `window.CAP_ISOLATE = true` **before** `@capScripts` in direct mode — the instrumentation
+>   then runs in an opaque-origin sandboxed iframe, removing the need for `'unsafe-eval'` in the
+>   parent CSP (`'wasm-unsafe-eval'` is still required for the proof-of-work).
+> - Disable instrumentation for the site key in the Cap admin dashboard.
 > - Add `'unsafe-eval'` to `script-src` (weakens the CSP of the parent page).
->
-> This is a known upstream issue: [tiagozip/cap#268](https://github.com/tiagozip/cap/issues/268).
 
 ### Middleware
 
