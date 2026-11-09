@@ -8,7 +8,17 @@ Cap works without tracking, cookies, or third-party services. This package integ
 
 - PHP **^8.2**
 - Laravel **12 or 13**
-- A running [Cap instance](https://trycap.dev/guide/) (self-hosted via Docker)
+- A running [Cap instance](https://trycap.dev/guide/) (self-hosted via Docker) — **capd v4** required
+
+> **Server version compatibility**
+>
+> The PHP verification layer (`Cap::verify`, middleware, rule) calls `/siteverify` and is compatible
+> with any Cap server version.
+>
+> The bundled widget (`cap-widget.js@0.1.61`) targets **capd v4**. It sends behavior scoring data
+> introduced in that version. Using it against a Cap v3 server with instrumentation enabled will
+> likely cause `[instr_timeout]` errors. Basic PoW without instrumentation may still work, but
+> this combination is untested and unsupported.
 
 ## Installation
 
