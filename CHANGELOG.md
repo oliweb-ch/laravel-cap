@@ -8,6 +8,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+## [1.16.0] — 2026-11-13
+
 ### Changed
 - **Widget updated to @cap.js/widget@0.1.63**:
   - 0.1.62: restores the Cap label position in the attribution link (cosmetic)
