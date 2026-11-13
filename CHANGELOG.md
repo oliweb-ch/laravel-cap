@@ -8,15 +8,54 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+### Changed
+- **Widget updated to @cap.js/widget@0.1.63**:
+  - 0.1.62: restores the Cap label position in the attribution link (cosmetic)
+  - 0.1.63: SHA-256 fallback when WebAssembly cannot compile (Safari Lockdown Mode,
+    CSP missing `wasm-unsafe-eval`) — requires capd ≥ 4.0.12 to take effect;
+    no impact on existing setups running an older server
+
+> **After `composer update`**, re-publish assets:
+> ```bash
+> php artisan vendor:publish --tag=cap-assets --force
+> ```
+
+## [1.15.0] — 2026-11-13
+
+### Changed
+- **Widget updated to @cap.js/widget@0.1.61** (from 0.1.56):
+  - 0.1.59: `CAP_ISOLATE` support, behavior scoring for capd v4, instrumentation
+    delivered as a base64 blob (no `instrumentation.html` file required)
+  - 0.1.60: troubleshooting links added to the widget
+  - 0.1.61: tap area fix
+- **`@capFrame` / `{{ cap:frame }}`** now automatically sets `window.CAP_ISOLATE = true`:
+  the instrumentation sub-iframe runs in an opaque origin (second isolation layer),
+  with no change required on the integrator side.
+
+### Added
+- Tests: `fail_open` with unreachable server, middleware alias through the HTTP kernel,
+  `@capConfig` reads config at render time.
+
+### Migration notes (capd v4)
+- Widget 0.1.61 sends behavior scoring data introduced in capd v4. Using it against a
+  Cap v3 server with instrumentation enabled may cause `[instr_timeout]` errors.
+  The PHP layer (`Cap::verify`) remains compatible with all server versions.
+- Cap v3 secrets continue to work in capd v4 for `/siteverify`. A secret reset is
+  only required to display the site-key in the capd v4 dashboard.
+
+> **After `composer update`**, re-publish assets:
+> ```bash
+> php artisan vendor:publish --tag=cap-assets --force
+> ```
+
 ## [1.13.1] — 2026-11-05
 
 ### Fixed
-- **`fail_open` ne laisse plus passer les erreurs 4xx** (closes #2). Une réponse
-  4xx du serveur Cap (ex: token rejoué, secret invalide) est une réponse
-  applicative, pas une défaillance d'infrastructure : `fail_open` n'a pas
-  vocation à couvrir ce cas. L'événement `CapMisconfigured` est toujours
-  dispatché, mais `verify()` retourne désormais `false` inconditionnellement
-  pour toute erreur cliente, quel que soit l'état de `fail_open`.
+- **`fail_open` no longer passes 4xx errors through** (closes #2). A 4xx response
+  from the Cap server (e.g. replayed token, invalid secret) is an application-level
+  response, not an infrastructure failure: `fail_open` is not meant to cover this
+  case. The `CapMisconfigured` event is still dispatched, but `verify()` now
+  unconditionally returns `false` for any client error, regardless of `fail_open`.
 
 ## [1.13.0] — 2026-10-30
 
