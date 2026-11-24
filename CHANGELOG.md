@@ -8,6 +8,19 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+## [1.17.0] — 2026-11-24
+
+### Changed
+- **Widget updated to @cap.js/widget@0.1.64**:
+  - 0.1.64: compatibility with Chromium 80–102 — the widget now uses the native
+    `deflate` format with a zlib header instead of downloading pako from jsDelivr,
+    preventing timeouts on older Chromium-based browsers
+
+> **After `composer update`**, re-publish assets:
+> ```bash
+> php artisan vendor:publish --tag=cap-assets --force
+> ```
+
 ## [1.16.0] — 2026-11-13
 
 ### Changed
