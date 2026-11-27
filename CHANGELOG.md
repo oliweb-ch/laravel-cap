@@ -8,6 +8,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ---
 ## [Unreleased]
 
+## [1.18.0] — 2026-11-27
+
+### Changed
+- **Widget updated to @cap.js/widget@0.1.65**:
+  - 0.1.65: stops fetching speculative challenges after resolution — a resolution
+    now counts as a single challenge (no extra background fetch)
+
+> **After `composer update`**, re-publish assets:
+> ```bash
+> php artisan vendor:publish --tag=cap-assets --force
+> ```
+
 ## [1.17.0] — 2026-11-24
 
 ### Changed
